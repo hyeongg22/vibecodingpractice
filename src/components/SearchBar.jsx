@@ -15,7 +15,7 @@ function SearchBar({ searchText, onSearchTextChange, onSearch }) {
           type="search"
           value={searchText}
           onChange={(event) => onSearchTextChange(event.target.value)}
-          placeholder="예: 사랑, 용기, 시간, 믿음"
+          placeholder="예: 시간, time, 時間, tiempo"
           autoComplete="off"
         />
         <button type="submit" className="search-button">

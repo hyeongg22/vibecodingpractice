@@ -122,7 +122,7 @@ function App() {
     <main className="app">
       <header className="app-header">
         <h1>오늘의 명언 생성기</h1>
-        <p>주제를 검색하거나, 버튼을 눌러 명언을 뽑아 보세요.</p>
+        <p>위인과 철학자의 문장 속에서, 오늘의 가치를 뽑아 보세요.</p>
       </header>
 
       <SearchBar

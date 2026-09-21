@@ -110,7 +110,7 @@ function createQuoteApiPlugin() {
                 },
                 {
                   role: 'user',
-                  content: `Write one original-sounding quote in ${languageName}. ${topicGuide} Use a real well-known person as the author. Return JSON like {"quote":"...","author":"..."}. The quote and author must both be written in ${languageName}.`,
+                  content: `Write one original-sounding quote in ${languageName}. ${topicGuide} The topic may be written in another language; still answer only in ${languageName}. Use a real well-known person as the author. Return JSON like {"quote":"...","author":"..."}. The quote and author must both be written in ${languageName}. Do not use Korean unless ${languageName} is Korean.`,
                 },
               ],
             }),

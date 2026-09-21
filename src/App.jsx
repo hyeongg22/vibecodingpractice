@@ -4,6 +4,7 @@ import SearchBar from './components/SearchBar.jsx';
 import FavoriteList from './components/FavoriteList.jsx';
 import LanguageSelect from './components/LanguageSelect.jsx';
 import quotes from './data/quotes.js';
+import { getSearchLanguage, languageNames } from './searchLanguage.js';
 
 const FAVORITE_STORAGE_KEY = 'favorite-quotes';
 
@@ -72,22 +73,38 @@ function App() {
   }
 
   function handleSearch() {
-    const nextMatchedQuotes = findQuotesByTopic(searchText);
     const nextTopic = searchText.trim();
+    const nextLanguage = getSearchLanguage(nextTopic, selectedLanguage);
 
     setActiveTopic(nextTopic);
-    setMatchedQuotes(nextMatchedQuotes);
+    setSelectedLanguage(nextLanguage);
+    setAiErrorMessage('');
 
-    if (nextMatchedQuotes.length > 0) {
-      showQuoteFromList(nextMatchedQuotes);
+    if (nextLanguage === 'ko') {
+      const nextMatchedQuotes = findQuotesByTopic(nextTopic);
+      setMatchedQuotes(nextMatchedQuotes);
+
+      if (nextMatchedQuotes.length > 0) {
+        showQuoteFromList(nextMatchedQuotes);
+      }
+
+      return;
     }
+
+    if (!import.meta.env.DEV) {
+      setMatchedQuotes([]);
+      setAiErrorMessage('다른 언어 명언은 로컬에서 npm run dev로 실행할 때 AI로 만들 수 있어요.');
+      return;
+    }
+
+    handleGenerateAiQuote(nextLanguage, nextTopic);
   }
 
   function handleNewQuote() {
     showQuoteFromList(matchedQuotes);
   }
 
-  async function handleGenerateAiQuote() {
+  async function handleGenerateAiQuote(language = selectedLanguage, topic = activeTopic) {
     setIsGenerating(true);
     setAiErrorMessage('');
 
@@ -98,8 +115,8 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          language: selectedLanguage,
-          topic: activeTopic,
+          language,
+          topic,
         }),
       });
 
@@ -110,10 +127,13 @@ function App() {
         return;
       }
 
-      setCurrentQuote({
+      const generatedQuote = {
         quote: result.quote,
         author: result.author,
-      });
+      };
+
+      setCurrentQuote(generatedQuote);
+      setMatchedQuotes([generatedQuote]);
       setAnimationKey((previousKey) => previousKey + 1);
     } catch (error) {
       setAiErrorMessage('서버에 연결하지 못했어요. npm run dev로 실행 중인지 확인해 주세요.');
@@ -164,7 +184,7 @@ function App() {
         <h1>오늘의 명언 생성기</h1>
         <p>
           {canUseAi
-            ? '언어를 고른 뒤 AI로 명언을 만들거나, 저장된 문장에서 뽑아 보세요.'
+            ? '한국어는 저장된 명언에서, 다른 언어는 검색하거나 AI로 그 언어 명언을 만들어 보세요.'
             : '주제를 검색하거나 버튼을 눌러 명언을 뽑아 보세요.'}
         </p>
       </header>
@@ -179,7 +199,9 @@ function App() {
         <p className="topic-status">
           {hasNoResult
             ? `"${activeTopic}"에 맞는 명언을 찾지 못했어요.`
-            : `"${activeTopic}"에 대한 명언 ${matchedQuotes.length}개`}
+            : selectedLanguage === 'ko'
+              ? `"${activeTopic}"에 대한 명언 ${matchedQuotes.length}개`
+              : `"${activeTopic}" 주제로 ${languageNames[selectedLanguage]} 명언`}
         </p>
       )}
 
@@ -206,7 +228,7 @@ function App() {
         author={currentQuote.author}
         onNewQuote={handleNewQuote}
         onSaveQuote={handleSaveQuote}
-        onGenerateAiQuote={handleGenerateAiQuote}
+        onGenerateAiQuote={() => handleGenerateAiQuote()}
         canChangeQuote={!hasNoResult && matchedQuotes.length > 1}
         isSaved={isCurrentQuoteSaved}
         isGenerating={isGenerating}
